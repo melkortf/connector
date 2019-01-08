@@ -18,3 +18,8 @@ else ()
     message (FATAL_ERROR "Source SDK not found")
 endif ()
 
+add_library (connector MODULE
+    connector.cpp
+)
+
+target_include_directories (connector PUBLIC ${SourceSdk2013}/mp/src/public)
