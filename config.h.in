@@ -1,0 +1,7 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+// generated from the VERSION file
+#define MORGOTH_CONNECTOR_VERSION "${connector_VERSION}"
+
+#endif // CONFIG_H

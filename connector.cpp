@@ -1,4 +1,5 @@
 #include "connector.h"
+#include "config.h"
 #include "eventstream.h"
 #include "convar.h"
 #include "tier1.h"
@@ -30,7 +31,7 @@ void addOutput(const CCommand& args)
 
 void printVersion(const CCommand& /*args*/)
 {
-    Msg("morgoth-connector version: 0.0.1\n");
+    Msg("morgoth-connector version: %s\n", MORGOTH_CONNECTOR_VERSION);
 }
 
 ConCommand addOutputCommand("connector_add_output", addOutput, "Outputs connector events to the given file");
@@ -64,6 +65,11 @@ bool Connector::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn /*gam
 
 void Connector::Unload()
 {
+    GameEvent event("goodbye");
+    std::for_each(m_eventStreams.begin(), m_eventStreams.end(), [&event](EventStream* eventStream) {
+        *eventStream << event;
+    });
+
     ConVar_Unregister();
     DisconnectTier1Libraries();
     m_loadCount -= 1;
@@ -171,4 +177,8 @@ void Connector::OnEdictFreed(const edict_t* /*edict*/)
 void Connector::addEventStream(EventStream* eventStream)
 {
     m_eventStreams.push_back(eventStream);
+
+    GameEvent event("hello");
+    event.addArgument(MORGOTH_CONNECTOR_VERSION);
+    *eventStream << event;
 }
