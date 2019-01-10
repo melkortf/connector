@@ -6,6 +6,10 @@
 #include "engine/iserverplugin.h"
 
 class Connector: public IServerPluginCallbacks {
+public:
+    Connector();
+    virtual ~Connector();
+
     // Initialize the plugin to run
     // Return false if there is an error during startup.
     bool Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameServerFactory) override;

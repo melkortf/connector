@@ -8,9 +8,39 @@
 namespace {
 Connector connector;
 EXPOSE_SINGLE_INTERFACE_GLOBALVAR(Connector, IServerPluginCallbacks, INTERFACEVERSION_ISERVERPLUGINCALLBACKS, connector)
+
+void addOutput(const CCommand& args)
+{
+    if (args.ArgC() <= 1) {
+        Msg("Usage: connector_add_output <file>\n");
+        return;
+    }
+
+    std::string output(args.Arg(1));
+    Msg("Printing morgoth connector events to %s\n", output.c_str());
 }
 
-bool Connector::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameServerFactory)
+void printVersion(const CCommand& /*args*/)
+{
+    Msg("morgoth-connector version: 0.0.1\n");
+}
+
+ConCommand addOutputCommand("connector_add_output", addOutput, "Outputs connector events to the given file");
+ConCommand printVersionCommand("connector_version", printVersion, "Prints morgoth-connector plugin version");
+
+} // ns
+
+Connector::Connector()
+{
+
+}
+
+Connector::~Connector()
+{
+
+}
+
+bool Connector::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn /*gameServerFactory*/)
 {
     if (!m_loadCount) {
         m_loadCount += 1;
@@ -47,17 +77,17 @@ const char* Connector::GetPluginDescription()
     return PluginDescription.c_str();
 }
 
-void Connector::LevelInit(const char* pMapName)
+void Connector::LevelInit(const char* /*pMapName*/)
 {
 
 }
 
-void Connector::ServerActivate(edict_t* pEdictList, int edictCount, int clientMax)
+void Connector::ServerActivate(edict_t* /*pEdictList*/, int /*edictCount*/, int /*clientMax*/)
 {
 
 }
 
-void Connector::GameFrame(bool simulating)
+void Connector::GameFrame(bool /*simulating*/)
 {
 
 }
@@ -67,17 +97,17 @@ void Connector::LevelShutdown()
 
 }
 
-void Connector::ClientActive(edict_t* pEntity)
+void Connector::ClientActive(edict_t* /*pEntity*/)
 {
 
 }
 
-void Connector::ClientDisconnect(edict_t* pEntity)
+void Connector::ClientDisconnect(edict_t* /*pEntity*/)
 {
 
 }
 
-void Connector::ClientPutInServer(edict_t* pEntity, const char* playername)
+void Connector::ClientPutInServer(edict_t* /*pEntity*/, const char* /*playername*/)
 {
 
 }
@@ -87,42 +117,41 @@ void Connector::SetCommandClient(int index)
     m_clientCommandIndex = index;
 }
 
-void Connector::ClientSettingsChanged(edict_t* pEdict)
+void Connector::ClientSettingsChanged(edict_t* /*pEdict*/)
 {
 
 }
 
-PLUGIN_RESULT Connector::ClientConnect(bool* bAllowConnect, edict_t* pEntity, const char* pszName, const char* pszAddress, char* reject, int maxrejectlen)
+PLUGIN_RESULT Connector::ClientConnect(bool* /*bAllowConnect*/, edict_t* /*pEntity*/,
+                                       const char* /*pszName*/, const char* /*pszAddress*/,
+                                       char* /*reject*/, int /*maxrejectlen*/)
 {
     return PLUGIN_CONTINUE;
 }
 
-PLUGIN_RESULT Connector::ClientCommand(edict_t* pEntity, const CCommand& args)
+PLUGIN_RESULT Connector::ClientCommand(edict_t* /*pEntity*/, const CCommand& /*args*/)
 {
     return PLUGIN_CONTINUE;
 }
 
-PLUGIN_RESULT Connector::NetworkIDValidated(const char* pszUserName, const char* pszNetworkID)
+PLUGIN_RESULT Connector::NetworkIDValidated(const char* /*pszUserName*/, const char* /*pszNetworkID*/)
 {
     return PLUGIN_CONTINUE;
 }
 
-void Connector::OnQueryCvarValueFinished(QueryCvarCookie_t iCookie, edict_t* pPlayerEntity, EQueryCvarValueStatus eStatus, const char* pCvarName, const char* pCvarValue)
+void Connector::OnQueryCvarValueFinished(QueryCvarCookie_t /*iCookie*/, edict_t* /*pPlayerEntity*/,
+                                         EQueryCvarValueStatus /*eStatus*/, const char* /*pCvarName*/,
+                                         const char* /*pCvarValue*/)
 {
 
 }
 
-void Connector::OnEdictAllocated(edict_t* edict)
+void Connector::OnEdictAllocated(edict_t* /*edict*/)
 {
 
 }
 
-void Connector::OnEdictFreed(const edict_t* edict)
+void Connector::OnEdictFreed(const edict_t* /*edict*/)
 {
 
-}
-
-CON_COMMAND(connector_version, "prints morgoth-connector version")
-{
-    Msg("morgoth-connector version: 0.0.1\n");
 }
