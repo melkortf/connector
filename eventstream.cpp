@@ -16,3 +16,9 @@ EventStream& EventStream::operator <<(const std::string& event)
     m_output << event << std::endl << std::flush;
     return *this;
 }
+
+EventStream& EventStream::operator <<(const GameEvent& event)
+{
+    m_output << event.toJson() << std::endl << std::flush;
+    return *this;
+}

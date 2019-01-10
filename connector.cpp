@@ -87,9 +87,10 @@ const char* Connector::GetPluginDescription()
 
 void Connector::LevelInit(const char* pMapName)
 {
-    std::string mapName(pMapName);
-    std::for_each(m_eventStreams.begin(), m_eventStreams.end(), [&mapName](EventStream* eventStream) {
-        *eventStream << mapName;
+    GameEvent event("changelevel");
+    event.addArgument(std::string(pMapName));
+    std::for_each(m_eventStreams.begin(), m_eventStreams.end(), [&event](EventStream* eventStream) {
+        *eventStream << event;
     });
 }
 

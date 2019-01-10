@@ -30,11 +30,15 @@ else ()
     message (FATAL_ERROR "Source SDK not found")
 endif ()
 
+include_directories (3rdparty)
+
 add_library (connector MODULE
     connector.h
     connector.cpp
     eventstream.h
     eventstream.cpp
+    gameevent.h
+    gameevent.cpp
 )
 
 target_compile_options (connector
@@ -55,6 +59,7 @@ target_compile_options (connector
         -Wno-nested-anon-types
         -Wno-unused-local-typedef
         -Wno-unused-private-field
+        -Wno-mismatched-tags
 )
 
 target_link_options (connector

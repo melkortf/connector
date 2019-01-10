@@ -1,6 +1,7 @@
 #ifndef EVENTSTREAM_H
 #define EVENTSTREAM_H
 
+#include "gameevent.h"
 #include <fstream>
 #include <string>
 
@@ -12,9 +13,11 @@ public:
     bool isOK() const { return m_output.is_open(); }
 
     EventStream& operator <<(const std::string& event);
+    EventStream& operator <<(const GameEvent& event);
 
 private:
     std::ofstream m_output;
+
 
 };
 
