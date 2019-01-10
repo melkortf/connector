@@ -33,6 +33,8 @@ endif ()
 add_library (connector MODULE
     connector.h
     connector.cpp
+    eventstream.h
+    eventstream.cpp
 )
 
 target_compile_options (connector

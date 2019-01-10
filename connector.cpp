@@ -1,9 +1,10 @@
 #include "connector.h"
+#include "eventstream.h"
 #include "convar.h"
 #include "tier1.h"
 #include "valve_minmax_off.h"
+#include <algorithm>
 #include <string>
-#include <iostream>
 
 namespace {
 Connector connector;
@@ -16,8 +17,15 @@ void addOutput(const CCommand& args)
         return;
     }
 
-    std::string output(args.Arg(1));
-    Msg("Printing morgoth connector events to %s\n", output.c_str());
+    std::string fileName(args.Arg(1));
+    EventStream* eventStream = new EventStream(fileName);
+    if (eventStream->isOK()) {
+        connector.addEventStream(eventStream);
+        Msg("Printing morgoth connector events to %s\n", fileName.c_str());
+    } else {
+        Warning("Could not open %s\n", fileName.c_str());
+        delete eventStream;
+    }
 }
 
 void printVersion(const CCommand& /*args*/)
@@ -37,7 +45,7 @@ Connector::Connector()
 
 Connector::~Connector()
 {
-
+    std::for_each(m_eventStreams.begin(), m_eventStreams.end(), [](auto e) { delete e; });
 }
 
 bool Connector::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn /*gameServerFactory*/)
@@ -77,9 +85,12 @@ const char* Connector::GetPluginDescription()
     return PluginDescription.c_str();
 }
 
-void Connector::LevelInit(const char* /*pMapName*/)
+void Connector::LevelInit(const char* pMapName)
 {
-
+    std::string mapName(pMapName);
+    std::for_each(m_eventStreams.begin(), m_eventStreams.end(), [&mapName](EventStream* eventStream) {
+        *eventStream << mapName;
+    });
 }
 
 void Connector::ServerActivate(edict_t* /*pEdictList*/, int /*edictCount*/, int /*clientMax*/)
@@ -154,4 +165,9 @@ void Connector::OnEdictAllocated(edict_t* /*edict*/)
 void Connector::OnEdictFreed(const edict_t* /*edict*/)
 {
 
+}
+
+void Connector::addEventStream(EventStream* eventStream)
+{
+    m_eventStreams.push_back(eventStream);
 }

@@ -4,6 +4,10 @@
 #include <cstdint>
 #include "interface.h"
 #include "engine/iserverplugin.h"
+#include "valve_minmax_off.h"
+#include <list>
+
+class EventStream;
 
 class Connector: public IServerPluginCallbacks {
 public:
@@ -72,9 +76,12 @@ public:
     void OnEdictAllocated(edict_t *edict) override;
     void OnEdictFreed(const edict_t *edict) override;
 
+    void addEventStream(EventStream* eventStream);
+
 private:
     int m_loadCount = 0;
     int m_clientCommandIndex;
+    std::list<EventStream*> m_eventStreams;
 
 };
 
