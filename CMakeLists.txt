@@ -77,6 +77,7 @@ target_compile_options (connector
         -Wno-unused-local-typedef
         -Wno-unused-private-field
         -Wno-mismatched-tags
+        -Wno-ignored-qualifiers
 )
 
 target_link_options (connector

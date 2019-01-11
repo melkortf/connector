@@ -1,11 +1,15 @@
 #include "connector.h"
 #include "config.h"
+#include "eiface.h"
 #include "eventstream.h"
 #include "convar.h"
+#include "game/server/iplayerinfo.h"
 #include "tier1.h"
 #include "valve_minmax_off.h"
 #include <algorithm>
 #include <string>
+
+using json = nlohmann::json;
 
 namespace {
 Connector connector;
@@ -49,13 +53,23 @@ Connector::~Connector()
     std::for_each(m_eventStreams.begin(), m_eventStreams.end(), [](auto e) { delete e; });
 }
 
-bool Connector::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn /*gameServerFactory*/)
+bool Connector::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameServerFactory)
 {
     if (!m_loadCount) {
         m_loadCount += 1;
 
         ConnectTier1Libraries(&interfaceFactory, 1);
         ConVar_Register();
+
+        m_playerInfoManager = (IPlayerInfoManager *)gameServerFactory(INTERFACEVERSION_PLAYERINFOMANAGER, nullptr);
+
+        if (!m_playerInfoManager) {
+            Warning("Could not load all interfaces\n");
+            return false;
+        }
+
+        m_globalVars = m_playerInfoManager->GetGlobalVars();
+
         return true;
     } else {
         Msg("morgoth connector already loaded; ignoring.\n");
@@ -94,7 +108,7 @@ const char* Connector::GetPluginDescription()
 void Connector::LevelInit(const char* pMapName)
 {
     GameEvent event("changelevel");
-    event.addArgument(std::string(pMapName));
+    event.setArguments({{ "map", pMapName }});
     std::for_each(m_eventStreams.begin(), m_eventStreams.end(), [&event](EventStream* eventStream) {
         *eventStream << event;
     });
@@ -178,7 +192,14 @@ void Connector::addEventStream(EventStream* eventStream)
 {
     m_eventStreams.push_back(eventStream);
 
+    json status = json::object();
+    status["map"] = m_globalVars->mapname.ToCStr();
+    status["hostname"] = ConVarRef("hostname").GetString();
+
     GameEvent event("hello");
-    event.addArgument(MORGOTH_CONNECTOR_VERSION);
+    event.setArguments({
+        { "version", MORGOTH_CONNECTOR_VERSION },
+        { "status", status }
+    });
     *eventStream << event;
 }

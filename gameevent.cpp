@@ -9,11 +9,6 @@ GameEvent::GameEvent(const std::string& name) :
 
 }
 
-void GameEvent::addArgument(const std::string& argument)
-{
-    m_arguments.push_back(argument);
-}
-
 std::string GameEvent::toJson() const
 {
     json json;
@@ -21,4 +16,9 @@ std::string GameEvent::toJson() const
     json["arguments"] = arguments();
 
     return json.dump();
+}
+
+void GameEvent::setArguments(const nlohmann::json& arguments)
+{
+    m_arguments = arguments;
 }

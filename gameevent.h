@@ -3,21 +3,22 @@
 
 #include <list>
 #include <string>
+#include <json.hpp>
 
 class GameEvent {
 public:
     explicit GameEvent(const std::string& name);
 
-    void addArgument(const std::string& argument);
-
     std::string toJson() const;
 
     const std::string& name() const { return m_name; }
-    const std::list<std::string>& arguments() const { return m_arguments; }
+
+    void setArguments(const nlohmann::json& arguments);
+    const nlohmann::json& arguments() const { return m_arguments; }
 
 private:
     std::string m_name;
-    std::list<std::string> m_arguments;
+    nlohmann::json m_arguments;
 
 };
 

@@ -8,6 +8,7 @@
 #include <list>
 
 class EventStream;
+class IPlayerInfoManager;
 
 class Connector: public IServerPluginCallbacks {
 public:
@@ -82,6 +83,8 @@ private:
     int m_loadCount = 0;
     int m_clientCommandIndex;
     std::list<EventStream*> m_eventStreams;
+    IPlayerInfoManager *m_playerInfoManager = nullptr;
+    CGlobalVars *m_globalVars = nullptr;
 
 };
 
