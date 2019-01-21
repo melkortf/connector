@@ -1,14 +1,16 @@
 #ifndef CONNECTOR_H
 #define CONNECTOR_H
 
-#include <cstdint>
-#include "interface.h"
+//#include <cstdint>
 #include "engine/iserverplugin.h"
 #include "valve_minmax_off.h"
+#include <QtCore/QScopedPointer>
 #include <list>
 
-class EventStream;
+namespace morgoth { class GameServer; }
 class IPlayerInfoManager;
+class IVEngineServer;
+class QCoreApplication;
 
 class Connector: public IServerPluginCallbacks {
 public:
@@ -77,14 +79,14 @@ public:
     void OnEdictAllocated(edict_t *edict) override;
     void OnEdictFreed(const edict_t *edict) override;
 
-    void addEventStream(EventStream* eventStream);
-
 private:
     int m_loadCount = 0;
     int m_clientCommandIndex;
-    std::list<EventStream*> m_eventStreams;
+    IVEngineServer *m_engine = nullptr;
     IPlayerInfoManager *m_playerInfoManager = nullptr;
     CGlobalVars *m_globalVars = nullptr;
+    QScopedPointer<QCoreApplication> m_application;
+    QScopedPointer<morgoth::GameServer> m_gameServer;
 
 };
 

@@ -1,15 +1,18 @@
 #include "connector.h"
 #include "config.h"
+
 #include "eiface.h"
-#include "eventstream.h"
 #include "convar.h"
 #include "game/server/iplayerinfo.h"
 #include "tier1.h"
+#include "filesystem.h"
 #include "valve_minmax_off.h"
-#include <algorithm>
-#include <string>
 
-using json = nlohmann::json;
+#include "gameserver.h"
+#include <QtDBus>
+#include <algorithm>
+#include <fstream>
+#include <string>
 
 namespace {
 Connector connector;
@@ -22,15 +25,15 @@ void addOutput(const CCommand& args)
         return;
     }
 
-    std::string fileName(args.Arg(1));
-    EventStream* eventStream = new EventStream(fileName);
-    if (eventStream->isOK()) {
-        connector.addEventStream(eventStream);
-        Msg("Printing morgoth connector events to %s\n", fileName.c_str());
-    } else {
-        Warning("Could not open %s\n", fileName.c_str());
-        delete eventStream;
-    }
+//    std::string fileName(args.Arg(1));
+//    EventStream* eventStream = new EventStream(fileName);
+//    if (eventStream->isOK()) {
+//        connector.addEventStream(eventStream);
+//        Msg("Printing morgoth connector events to %s\n", fileName.c_str());
+//    } else {
+//        Warning("Could not open %s\n", fileName.c_str());
+//        delete eventStream;
+//    }
 }
 
 void printVersion(const CCommand& /*args*/)
@@ -41,16 +44,71 @@ void printVersion(const CCommand& /*args*/)
 ConCommand addOutputCommand("connector_add_output", addOutput, "Outputs connector events to the given file");
 ConCommand printVersionCommand("connector_version", printVersion, "Prints morgoth-connector plugin version");
 
+char** getProgramArguments(int* argc)
+{
+    // get arguments that were passed to the current process (like argc + argv, but without main())
+    static char** argv = nullptr;
+    static int _argc = 0;
+    if (argv) {
+        *argc = _argc;
+        return argv;
+    }
+
+    std::ifstream cmdline("/proc/self/cmdline");
+    if (!cmdline.is_open())
+        throw std::runtime_error("cannot read launch arguments");
+
+    std::vector<std::string> arguments;
+    std::string arg;
+    while (std::getline(cmdline, arg, '\0'))
+        arguments.push_back(arg);
+
+    argv = new char*[arguments.size()];
+    for (size_t i = 0; i < arguments.size(); ++i) {
+        argv[i] = new char[arguments.at(i).length() + 1];
+        ::memset(argv[i], '\0', arguments.at(i).length() + 1);
+        ::memcpy(argv[i], arguments.at(i).c_str(), arguments.at(i).length());
+    }
+
+    _argc = static_cast<int>(arguments.size());
+    *argc = _argc;
+    return argv;
+}
+
+void srcdsMessageHandler(QtMsgType type, const QMessageLogContext& context, const QString& msg)
+{
+    Q_UNUSED(context);
+
+    static const char* Prefix = "[morgoth-connector]";
+
+    switch (type) {
+        case QtFatalMsg:
+            Error("%s %s\n", Prefix, qPrintable(msg));
+            break;
+
+        case QtCriticalMsg:
+        case QtWarningMsg:
+            Warning("%s %s\n", Prefix, qPrintable(msg));
+            break;
+
+        case QtInfoMsg:
+        case QtDebugMsg:
+            Msg("%s %s\n", Prefix, qPrintable(msg));
+            break;
+    }
+}
+
 } // ns
 
-Connector::Connector()
+Connector::Connector() :
+    m_gameServer(new morgoth::GameServer)
 {
 
 }
 
 Connector::~Connector()
 {
-    std::for_each(m_eventStreams.begin(), m_eventStreams.end(), [](auto e) { delete e; });
+
 }
 
 bool Connector::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameServerFactory)
@@ -61,7 +119,8 @@ bool Connector::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameS
         ConnectTier1Libraries(&interfaceFactory, 1);
         ConVar_Register();
 
-        m_playerInfoManager = (IPlayerInfoManager *)gameServerFactory(INTERFACEVERSION_PLAYERINFOMANAGER, nullptr);
+        m_engine = reinterpret_cast<IVEngineServer*>(interfaceFactory(INTERFACEVERSION_VENGINESERVER, nullptr));
+        m_playerInfoManager = reinterpret_cast<IPlayerInfoManager*>(gameServerFactory(INTERFACEVERSION_PLAYERINFOMANAGER, nullptr));
 
         if (!m_playerInfoManager) {
             Warning("Could not load all interfaces\n");
@@ -70,23 +129,53 @@ bool Connector::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameS
 
         m_globalVars = m_playerInfoManager->GetGlobalVars();
 
+        // Qt initialization
+        qInstallMessageHandler(::srcdsMessageHandler);
+
+        int argc;
+        char** argv = ::getProgramArguments(&argc);
+        m_application.reset(new QCoreApplication(argc, argv));
+
+        // http://stackoverflow.com/questions/25661295/why-does-qcoreapplication-call-setlocalelc-all-by-default-on-unix-linux
+        setlocale(LC_NUMERIC, "C");
+
+        if (!QDBusConnection::sessionBus().isConnected()) {
+            qCritical("Cannot connect to the D-Bus session bus");
+            return false;
+        }
+
+        if (!QDBusConnection::sessionBus().registerObject("/", m_gameServer.data())) {
+            qCritical("%s", qPrintable(QDBusConnection::sessionBus().lastError().message()));
+            return false;
+        }
+
+        if (!QDBusConnection::sessionBus().registerService("org.morgoth.connector.GameServer")) {
+            qCritical("%s", qPrintable(QDBusConnection::sessionBus().lastError().message()));
+            return false;
+        }
+
+        qInfo("Running");
+
         return true;
     } else {
-        Msg("morgoth connector already loaded; ignoring.\n");
+        qInfo("morgoth connector already loaded; ignoring.");
         return false;
     }
 }
 
 void Connector::Unload()
 {
-    GameEvent event("goodbye");
-    std::for_each(m_eventStreams.begin(), m_eventStreams.end(), [&event](EventStream* eventStream) {
-        *eventStream << event;
-    });
-
-    ConVar_Unregister();
-    DisconnectTier1Libraries();
     m_loadCount -= 1;
+
+    if (m_loadCount == 0) {
+        m_application->processEvents();
+        m_application->quit();
+        m_application->processEvents();
+        delete m_application.take();
+
+        ConVar_Unregister();
+        DisconnectTier1Libraries();
+    }
 }
 
 void Connector::Pause()
@@ -107,11 +196,7 @@ const char* Connector::GetPluginDescription()
 
 void Connector::LevelInit(const char* pMapName)
 {
-    GameEvent event("changelevel");
-    event.setArguments({{ "map", pMapName }});
-    std::for_each(m_eventStreams.begin(), m_eventStreams.end(), [&event](EventStream* eventStream) {
-        *eventStream << event;
-    });
+    m_gameServer->setMap(pMapName);
 }
 
 void Connector::ServerActivate(edict_t* /*pEdictList*/, int /*edictCount*/, int /*clientMax*/)
@@ -121,7 +206,7 @@ void Connector::ServerActivate(edict_t* /*pEdictList*/, int /*edictCount*/, int 
 
 void Connector::GameFrame(bool /*simulating*/)
 {
-
+    QCoreApplication::processEvents();
 }
 
 void Connector::LevelShutdown()
@@ -186,20 +271,4 @@ void Connector::OnEdictAllocated(edict_t* /*edict*/)
 void Connector::OnEdictFreed(const edict_t* /*edict*/)
 {
 
-}
-
-void Connector::addEventStream(EventStream* eventStream)
-{
-    m_eventStreams.push_back(eventStream);
-
-    json status = json::object();
-    status["map"] = m_globalVars->mapname.ToCStr();
-    status["hostname"] = ConVarRef("hostname").GetString();
-
-    GameEvent event("hello");
-    event.setArguments({
-        { "version", MORGOTH_CONNECTOR_VERSION },
-        { "status", status }
-    });
-    *eventStream << event;
 }

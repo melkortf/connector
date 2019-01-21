@@ -24,9 +24,9 @@ if (NOT connector_VERSION)
     endif ()
 endif ()
 
-set (CMAKE_CXX_FLAGS_DEBUG "-g -ggdb -Wall -Wextra -Wpedantic")
+set (CMAKE_CXX_FLAGS_DEBUG "-g -ggdb -Wall")
 set (CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -fpermissive -march=pentium3 -mmmx -msse")
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     set (CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-undefined -Wl,--exclude-libs,ALL")
 else ()
@@ -46,13 +46,15 @@ else ()
     message (FATAL_ERROR "Source SDK not found")
 endif ()
 
+find_package (Qt5 5.5 REQUIRED COMPONENTS Core DBus)
+set (CMAKE_AUTOMOC ON)
+
 add_library (connector MODULE
     connector.h
+    gameserver.h
+
     connector.cpp
-    eventstream.h
-    eventstream.cpp
-    gameevent.h
-    gameevent.cpp
+    gameserver.cpp
 )
 
 configure_file (config.h.in config.h)
@@ -61,9 +63,8 @@ target_sources (connector PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 target_compile_options (connector
     PUBLIC
         -m32
-        -march=pentium3
-        -mmmx
-        -msse
+        -fvisibility=hidden
+        -fvisibility-inlines-hidden
         -Wno-unknown-pragmas
         -Wno-unused-parameter
         -Wno-gnu-zero-variadic-macro-arguments
@@ -78,6 +79,7 @@ target_compile_options (connector
         -Wno-unused-private-field
         -Wno-mismatched-tags
         -Wno-ignored-qualifiers
+        -Wno-unused-local-typedefs
 )
 
 target_link_options (connector
@@ -86,11 +88,14 @@ target_link_options (connector
 )
 
 target_include_directories (connector PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty
+    ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
+    ${SourceSdk2013}/mp/src/common
     ${SourceSdk2013}/mp/src/public
     ${SourceSdk2013}/mp/src/public/tier0
     ${SourceSdk2013}/mp/src/public/tier1
+    ${SourceSdk2013}/mp/src/game/shared
+    ${SourceSdk2013}/mp/src/game/server
 )
 
 target_compile_definitions (connector PUBLIC
@@ -99,6 +104,8 @@ target_compile_definitions (connector PUBLIC
     LINUX
     _LINUX
     _WCHAR_T_DEFINED
+    RAD_TELEMETRY_DISABLED
+    NO_MALLOC_OVERRIDE
 )
 
 set_target_properties (connector PROPERTIES
@@ -114,6 +121,7 @@ target_link_directories(connector
 
 target_link_libraries (connector
     PUBLIC
+        Qt5::DBus
         tier0
         vstdlib
         ${SourceSdk2013}/mp/src/lib/public/linux32/tier1.a
