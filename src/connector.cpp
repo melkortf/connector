@@ -144,16 +144,6 @@ bool Connector::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameS
             return false;
         }
 
-        if (!QDBusConnection::sessionBus().registerObject("/", m_gameServer.data())) {
-            qCritical("%s", qPrintable(QDBusConnection::sessionBus().lastError().message()));
-            return false;
-        }
-
-        if (!QDBusConnection::sessionBus().registerService("org.morgoth.connector.GameServer")) {
-            qCritical("%s", qPrintable(QDBusConnection::sessionBus().lastError().message()));
-            return false;
-        }
-
         qInfo("Running");
 
         return true;
