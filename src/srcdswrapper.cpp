@@ -10,16 +10,6 @@ std::map<std::string, std::function<void (std::string)>> conVarHandlers;
 
 }
 
-// used in connector.cpp
-void conVarChangeHandler(IConVar *var, const char */*pOldValue*/, float /*flOldValue*/)
-{
-    std::string name(var->GetName());
-    auto handler = conVarHandlers.find(name);
-    if (handler != conVarHandlers.end()) {
-        handler->second(static_cast<ConVar*>(var)->GetString());
-    }
-}
-
 namespace morgoth {
 
 const char* SrcdsWrapper::getConVarString(const char* cvarName)
@@ -35,6 +25,15 @@ const char* SrcdsWrapper::getConVarString(const char* cvarName)
 void SrcdsWrapper::trackConVar(const char* cvarName, std::function<void (std::string)> handler)
 {
     conVarHandlers.insert(std::make_pair(cvarName, handler));
+}
+
+void SrcdsWrapper::conVarChangeHandler(IConVar* var, const char* /*pOldValue*/, float /*flOldValue*/)
+{
+    std::string name(var->GetName());
+    auto handler = conVarHandlers.find(name);
+    if (handler != conVarHandlers.end()) {
+        handler->second(static_cast<ConVar*>(var)->GetString());
+    }
 }
 
 } // namespace morgoth

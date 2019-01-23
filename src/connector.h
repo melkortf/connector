@@ -13,7 +13,7 @@ class IPlayerInfoManager;
 class IVEngineServer;
 class QCoreApplication;
 
-class Connector: public IServerPluginCallbacks {
+class Connector : public IServerPluginCallbacks {
 public:
     Connector();
     virtual ~Connector();

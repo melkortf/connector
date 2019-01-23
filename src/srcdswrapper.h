@@ -3,6 +3,9 @@
 
 #include <functional>
 
+class Connector;
+class IConVar;
+
 namespace morgoth {
 
 /**
@@ -14,6 +17,10 @@ public:
     static void trackConVar(const char* cvarName, std::function<void(std::string)> handler);
 
     SrcdsWrapper() = delete;
+
+private:
+    friend class ::Connector;
+    static void conVarChangeHandler(IConVar *var, const char *pOldValue, float flOldValue);
 
 };
 

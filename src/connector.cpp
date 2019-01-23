@@ -10,6 +10,7 @@
 #include "valve_minmax_off.h"
 
 #include "gameserver.h"
+#include "srcdswrapper.h"
 #include <QtDBus>
 #include <algorithm>
 #include <fstream>
@@ -126,11 +127,10 @@ bool Connector::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameS
             return false;
         }
 
+        m_icVar->InstallGlobalChangeCallback(morgoth::SrcdsWrapper::conVarChangeHandler);
         m_gameServer.reset(new morgoth::GameServer);
-        qInfo("Running");
 
-        extern void conVarChangeHandler(IConVar *var, const char */*pOldValue*/, float /*flOldValue*/);
-        m_icVar->InstallGlobalChangeCallback(conVarChangeHandler);
+        qInfo("Running");
 
         return true;
     } else {
