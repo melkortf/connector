@@ -79,6 +79,8 @@ public:
     void OnEdictAllocated(edict_t *edict) override;
     void OnEdictFreed(const edict_t *edict) override;
 
+    static Connector* instance();
+
 private:
     int m_loadCount = 0;
     int m_clientCommandIndex;

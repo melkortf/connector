@@ -18,30 +18,11 @@ namespace {
 Connector connector;
 EXPOSE_SINGLE_INTERFACE_GLOBALVAR(Connector, IServerPluginCallbacks, INTERFACEVERSION_ISERVERPLUGINCALLBACKS, connector)
 
-void addOutput(const CCommand& args)
-{
-    if (args.ArgC() <= 1) {
-        Msg("Usage: connector_add_output <file>\n");
-        return;
-    }
-
-//    std::string fileName(args.Arg(1));
-//    EventStream* eventStream = new EventStream(fileName);
-//    if (eventStream->isOK()) {
-//        connector.addEventStream(eventStream);
-//        Msg("Printing morgoth connector events to %s\n", fileName.c_str());
-//    } else {
-//        Warning("Could not open %s\n", fileName.c_str());
-//        delete eventStream;
-//    }
-}
-
 void printVersion(const CCommand& /*args*/)
 {
     Msg("morgoth-connector version: %s\n", MORGOTH_CONNECTOR_VERSION);
 }
 
-ConCommand addOutputCommand("connector_add_output", addOutput, "Outputs connector events to the given file");
 ConCommand printVersionCommand("connector_version", printVersion, "Prints morgoth-connector plugin version");
 
 char** getProgramArguments(int* argc)
@@ -100,8 +81,7 @@ void srcdsMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
 
 } // ns
 
-Connector::Connector() :
-    m_gameServer(new morgoth::GameServer)
+Connector::Connector()
 {
 
 }
@@ -143,6 +123,14 @@ bool Connector::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameS
             qCritical("Cannot connect to the D-Bus session bus");
             return false;
         }
+
+        m_gameServer.reset(new morgoth::GameServer);
+
+//        ConVarRef hostname("hostname");
+//        static_cast<ConVar*>(hostname.GetLinkedConVar())->InstallChangeCallback(
+//            [](IConVar *var, const char *pOldValue, float flOldValue) {
+//                connector.gameServer()
+//            });
 
         qInfo("Running");
 
@@ -261,4 +249,9 @@ void Connector::OnEdictAllocated(edict_t* /*edict*/)
 void Connector::OnEdictFreed(const edict_t* /*edict*/)
 {
 
+}
+
+Connector* Connector::instance()
+{
+    return &connector;
 }
