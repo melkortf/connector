@@ -5,8 +5,6 @@
 
 namespace morgoth {
 
-class SrcdsWrapper;
-
 /**
  * \brief The GameServer class provides an easy access to the running game server.
  */
@@ -27,6 +25,7 @@ class GameServer : public QObject {
 signals:
     void aboutToQuit();
     void mapChanged(const QString& map);
+    void conVarChanged(QString conVarName, QString newValue);
 
 public:
     GameServer(QObject* parent = nullptr);
@@ -43,8 +42,9 @@ public slots:
      */
     QString getConVarValue(const QString& conVarName);
 
+    void watchConVar(const QString& conVarName);
+
 private:
-    QScopedPointer<SrcdsWrapper> m_wrapper;
     QString m_gameLocation;
     QString m_map;
 

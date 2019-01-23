@@ -3,6 +3,7 @@
 
 #include "eiface.h"
 #include "convar.h"
+#include "icvar.h"
 #include "game/server/iplayerinfo.h"
 #include "tier1.h"
 #include "filesystem.h"
@@ -101,6 +102,7 @@ bool Connector::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameS
 
         m_engine = reinterpret_cast<IVEngineServer*>(interfaceFactory(INTERFACEVERSION_VENGINESERVER, nullptr));
         m_playerInfoManager = reinterpret_cast<IPlayerInfoManager*>(gameServerFactory(INTERFACEVERSION_PLAYERINFOMANAGER, nullptr));
+        m_icVar = reinterpret_cast<ICvar*>(interfaceFactory(CVAR_INTERFACE_VERSION, nullptr));
 
         if (!m_playerInfoManager) {
             Warning("Could not load all interfaces\n");
@@ -125,14 +127,10 @@ bool Connector::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameS
         }
 
         m_gameServer.reset(new morgoth::GameServer);
-
-//        ConVarRef hostname("hostname");
-//        static_cast<ConVar*>(hostname.GetLinkedConVar())->InstallChangeCallback(
-//            [](IConVar *var, const char *pOldValue, float flOldValue) {
-//                connector.gameServer()
-//            });
-
         qInfo("Running");
+
+        extern void conVarChangeHandler(IConVar *var, const char */*pOldValue*/, float /*flOldValue*/);
+        m_icVar->InstallGlobalChangeCallback(conVarChangeHandler);
 
         return true;
     } else {
@@ -146,10 +144,14 @@ void Connector::Unload()
     m_loadCount -= 1;
 
     if (m_loadCount == 0) {
+        m_gameServer->aboutToQuit();
+        m_application->processEvents();
+        m_gameServer->deleteLater();
         m_application->processEvents();
         m_application->quit();
         m_application->processEvents();
         delete m_application.take();
+        m_gameServer.reset();
 
         ConVar_Unregister();
         DisconnectTier1Libraries();

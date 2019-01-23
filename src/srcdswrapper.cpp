@@ -3,32 +3,38 @@
 #include <map>
 #include <string>
 
+namespace {
+
+std::map<std::string, ConVarRef> conVars;
+std::map<std::string, std::function<void (std::string)>> conVarHandlers;
+
+}
+
+// used in connector.cpp
+void conVarChangeHandler(IConVar *var, const char */*pOldValue*/, float /*flOldValue*/)
+{
+    std::string name(var->GetName());
+    auto handler = conVarHandlers.find(name);
+    if (handler != conVarHandlers.end()) {
+        handler->second(static_cast<ConVar*>(var)->GetString());
+    }
+}
+
 namespace morgoth {
 
-class SrcdsWrapperPrivate {
-public:
-    std::map<std::string, ConVarRef> conVars;
-
-};
-
-SrcdsWrapper::SrcdsWrapper() : d(new SrcdsWrapperPrivate)
-{
-
-}
-
-SrcdsWrapper::~SrcdsWrapper()
-{
-
-}
-
-const char* SrcdsWrapper::getConVarString(const char* cvarName) const
+const char* SrcdsWrapper::getConVarString(const char* cvarName)
 {
     // cache all ConVarRefs, as the lookup is expensive
-    if (!d->conVars.count(cvarName)) {
-        d->conVars.insert(std::make_pair(cvarName, ConVarRef(cvarName)));
+    if (!conVars.count(cvarName)) {
+        conVars.insert(std::make_pair(cvarName, ConVarRef(cvarName)));
     }
 
-    return d->conVars.at(cvarName).GetString();
+    return conVars.at(cvarName).GetString();
+}
+
+void SrcdsWrapper::trackConVar(const char* cvarName, std::function<void (std::string)> handler)
+{
+    conVarHandlers.insert(std::make_pair(cvarName, handler));
 }
 
 } // namespace morgoth

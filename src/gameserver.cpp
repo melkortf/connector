@@ -24,7 +24,6 @@ namespace morgoth {
 
 GameServer::GameServer(QObject* parent)  :
     QObject(parent),
-    m_wrapper(new SrcdsWrapper),
     m_gameLocation(QCoreApplication::applicationDirPath())
 {
     new GameServerAdaptor(this);
@@ -34,8 +33,6 @@ GameServer::GameServer(QObject* parent)  :
 
     QString serviceName = ::findFirstAvailableServerId(conn);
     conn.registerService(serviceName);
-
-    connect(qApp, &QCoreApplication::aboutToQuit, this, &GameServer::aboutToQuit);
 }
 
 GameServer::~GameServer()
@@ -51,7 +48,14 @@ void GameServer::setMap(const QString& map)
 
 QString GameServer::getConVarValue(const QString& conVarName)
 {
-    return m_wrapper->getConVarString(conVarName.toLocal8Bit().constData());
+    return SrcdsWrapper::getConVarString(conVarName.toLocal8Bit().constData());
+}
+
+void GameServer::watchConVar(const QString& conVarName)
+{
+    SrcdsWrapper::trackConVar(conVarName.toLocal8Bit().constData(), [this, conVarName](std::string newValue) {
+        emit conVarChanged(conVarName, newValue.c_str());
+    });
 }
 
 } // namespace morgoth

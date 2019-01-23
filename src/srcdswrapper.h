@@ -1,24 +1,19 @@
 #ifndef SRCDSWRAPPER_H
 #define SRCDSWRAPPER_H
 
-#include <memory>
+#include <functional>
 
 namespace morgoth {
-
-class SrcdsWrapperPrivate;
 
 /**
  * A utility class to hide all the srcds compilation warnings in one place.
  */
 class SrcdsWrapper {
 public:
-    SrcdsWrapper();
-    virtual ~SrcdsWrapper();
+    static const char* getConVarString(const char* cvarName);
+    static void trackConVar(const char* cvarName, std::function<void(std::string)> handler);
 
-    const char* getConVarString(const char* cvarName) const;
-
-private:
-    std::unique_ptr<SrcdsWrapperPrivate> d;
+    SrcdsWrapper() = delete;
 
 };
 

@@ -8,6 +8,7 @@
 #include <list>
 
 namespace morgoth { class GameServer; }
+class ICvar;
 class IPlayerInfoManager;
 class IVEngineServer;
 class QCoreApplication;
@@ -87,6 +88,7 @@ private:
     IVEngineServer *m_engine = nullptr;
     IPlayerInfoManager *m_playerInfoManager = nullptr;
     CGlobalVars *m_globalVars = nullptr;
+    ICvar *m_icVar = nullptr;
     QScopedPointer<QCoreApplication> m_application;
     QScopedPointer<morgoth::GameServer> m_gameServer;
 
