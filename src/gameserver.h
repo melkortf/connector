@@ -7,11 +7,21 @@ namespace morgoth {
 
 class SrcdsWrapper;
 
+/**
+ * \brief The GameServer class provides an easy access to the running game server.
+ */
 class GameServer : public QObject {
     Q_OBJECT
     Q_CLASSINFO("D-Bus Interface", "org.morgoth.connector.GameServer")
 
+    /**
+     * Contains the location of the server installation.
+     */
     Q_PROPERTY(QString gameLocation READ gameLocation CONSTANT)
+
+    /**
+     * The currently running map.
+     */
     Q_PROPERTY(QString map READ map NOTIFY mapChanged)
 
 signals:
@@ -28,6 +38,9 @@ public:
     void setMap(const QString& map);
 
 public slots:
+    /**
+     * \brief Queries for the current value of the given ConVar.
+     */
     QString getConVarValue(const QString& conVarName);
 
 private:

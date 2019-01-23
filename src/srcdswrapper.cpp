@@ -23,6 +23,7 @@ SrcdsWrapper::~SrcdsWrapper()
 
 const char* SrcdsWrapper::getConVarString(const char* cvarName) const
 {
+    // cache all ConVarRefs, as the lookup is expensive
     if (!d->conVars.count(cvarName)) {
         d->conVars.insert(std::make_pair(cvarName, ConVarRef(cvarName)));
     }
