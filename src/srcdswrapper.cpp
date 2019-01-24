@@ -22,6 +22,16 @@ const char* SrcdsWrapper::getConVarString(const char* cvarName)
     return conVars.at(cvarName).GetString();
 }
 
+int SrcdsWrapper::getConVarInt(const char* cvarName)
+{
+    // cache all ConVarRefs, as the lookup is expensive
+    if (!conVars.count(cvarName)) {
+        conVars.insert(std::make_pair(cvarName, ConVarRef(cvarName)));
+    }
+
+    return conVars.at(cvarName).GetInt();
+}
+
 void SrcdsWrapper::trackConVar(const char* cvarName, std::function<void (std::string)> handler)
 {
     conVarHandlers.insert(std::make_pair(cvarName, handler));

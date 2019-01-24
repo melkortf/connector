@@ -22,9 +22,12 @@ class GameServer : public QObject {
      */
     Q_PROPERTY(QString map READ map NOTIFY mapChanged)
 
+    Q_PROPERTY(QString address READ address NOTIFY addressChanged)
+
 signals:
     void aboutToQuit();
     void mapChanged(const QString& map);
+    void addressChanged(const QString& address);
     void conVarChanged(QString conVarName, QString newValue);
 
 public:
@@ -36,6 +39,8 @@ public:
     const QString& map() const { return m_map; }
     void setMap(const QString& map);
 
+    const QString& address() const { return m_address; }
+
 public slots:
     /**
      * \brief Queries for the current value of the given ConVar.
@@ -44,9 +49,13 @@ public slots:
 
     void watchConVar(const QString& conVarName);
 
+private slots:
+    void fetchUrl();
+
 private:
     QString m_gameLocation;
     QString m_map;
+    QString m_address;
 
 };
 
