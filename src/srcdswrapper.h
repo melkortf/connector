@@ -16,6 +16,7 @@ public:
     static const char* getConVarString(const char* cvarName);
     static int getConVarInt(const char* cvarName);
     static void trackConVar(const char* cvarName, std::function<void(std::string)> handler);
+    static int getMaxPlayers();
 
     SrcdsWrapper() = delete;
 

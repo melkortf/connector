@@ -10,6 +10,7 @@
 #include "valve_minmax_off.h"
 
 #include "gameserver.h"
+#include "interfacestore.h"
 #include "srcdswrapper.h"
 #include <QtDBus>
 #include <algorithm>
@@ -101,16 +102,19 @@ bool Connector::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameS
         ConnectTier1Libraries(&interfaceFactory, 1);
         ConVar_Register();
 
-        m_engine = reinterpret_cast<IVEngineServer*>(interfaceFactory(INTERFACEVERSION_VENGINESERVER, nullptr));
-        m_playerInfoManager = reinterpret_cast<IPlayerInfoManager*>(gameServerFactory(INTERFACEVERSION_PLAYERINFOMANAGER, nullptr));
-        m_icVar = reinterpret_cast<ICvar*>(interfaceFactory(CVAR_INTERFACE_VERSION, nullptr));
+        InterfaceStore::engineServer = reinterpret_cast<IVEngineServer*>(interfaceFactory(INTERFACEVERSION_VENGINESERVER, nullptr));
+        InterfaceStore::playerInfoManager = reinterpret_cast<IPlayerInfoManager*>(gameServerFactory(INTERFACEVERSION_PLAYERINFOMANAGER, nullptr));
 
-        if (!m_playerInfoManager) {
+        if (!InterfaceStore::isValid()) {
             Warning("Could not load all interfaces\n");
             return false;
         }
 
-        m_globalVars = m_playerInfoManager->GetGlobalVars();
+        ICvar* icVar = reinterpret_cast<ICvar*>(interfaceFactory(CVAR_INTERFACE_VERSION, nullptr));
+        if (!icVar) {
+            Warning("Could not load all interfaces\n");
+            return false;
+        }
 
         // Qt initialization
         qInstallMessageHandler(::srcdsMessageHandler);
@@ -127,7 +131,7 @@ bool Connector::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameS
             return false;
         }
 
-        m_icVar->InstallGlobalChangeCallback(morgoth::SrcdsWrapper::conVarChangeHandler);
+        icVar->InstallGlobalChangeCallback(morgoth::SrcdsWrapper::conVarChangeHandler);
         m_gameServer.reset(new morgoth::GameServer);
 
         qInfo("Running");

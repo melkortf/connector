@@ -4,10 +4,12 @@ set (CMAKE_AUTOMOC ON)
 add_library (connector MODULE
     connector.h
     gameserver.h
+    interfacestore.h
     srcdswrapper.h
 
     connector.cpp
     gameserver.cpp
+    interfacestore.cpp
     srcdswrapper.cpp
 )
 
@@ -21,7 +23,7 @@ set_property (SOURCE ${gameserver_DBUS_ADAPTOR} PROPERTY SKIP_AUTOMOC ON)
 target_compile_options (connector PUBLIC -m32)
 target_link_options (connector PUBLIC -m32 -Wl,--no-gnu-unique -fuse-ld=gold -static-libstdc++ -static-libgcc)
 
-set_source_files_properties (connector.cpp srcdswrapper.cpp PROPERTIES
+set_source_files_properties (connector.cpp interfacestore.cpp srcdswrapper.cpp PROPERTIES
     COMPILE_FLAGS "\
         -fpermissive\
         -Wno-unknown-pragmas\

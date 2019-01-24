@@ -51,6 +51,11 @@ void GameServer::setMap(const QString& map)
     emit mapChanged(m_map);
 }
 
+int GameServer::maxPlayers() const
+{
+    return SrcdsWrapper::getMaxPlayers();
+}
+
 QString GameServer::getConVarValue(const QString& conVarName)
 {
     return SrcdsWrapper::getConVarString(conVarName.toLocal8Bit().constData());

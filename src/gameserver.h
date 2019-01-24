@@ -23,6 +23,7 @@ class GameServer : public QObject {
     Q_PROPERTY(QString map READ map NOTIFY mapChanged)
 
     Q_PROPERTY(QString address READ address NOTIFY addressChanged)
+    Q_PROPERTY(int maxPlayers READ maxPlayers CONSTANT)
 
 signals:
     void aboutToQuit();
@@ -40,6 +41,7 @@ public:
     void setMap(const QString& map);
 
     const QString& address() const { return m_address; }
+    int maxPlayers() const;
 
 public slots:
     /**

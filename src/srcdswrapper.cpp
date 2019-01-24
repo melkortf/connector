@@ -1,4 +1,5 @@
 #include "srcdswrapper.h"
+#include "interfacestore.h"
 #include <convar.h>
 #include <map>
 #include <string>
@@ -35,6 +36,11 @@ int SrcdsWrapper::getConVarInt(const char* cvarName)
 void SrcdsWrapper::trackConVar(const char* cvarName, std::function<void (std::string)> handler)
 {
     conVarHandlers.insert(std::make_pair(cvarName, handler));
+}
+
+int SrcdsWrapper::getMaxPlayers()
+{
+    return InterfaceStore::playerInfoManager->GetGlobalVars()->maxClients;
 }
 
 void SrcdsWrapper::conVarChangeHandler(IConVar* var, const char* /*pOldValue*/, float /*flOldValue*/)
