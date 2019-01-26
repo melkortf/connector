@@ -1,17 +1,15 @@
 #include "connector.h"
 #include "config.h"
-
-#include "eiface.h"
-#include "convar.h"
-#include "icvar.h"
-#include "game/server/iplayerinfo.h"
-#include "tier1.h"
-#include "filesystem.h"
-#include "valve_minmax_off.h"
-
 #include "gameserver.h"
 #include "interfacestore.h"
 #include "srcdswrapper.h"
+#include <eiface.h>
+#include <convar.h>
+#include <icvar.h>
+#include <game/server/iplayerinfo.h>
+#include <tier1.h>
+#include <filesystem.h>
+#include <valve_minmax_off.h>
 #include <QtDBus>
 #include <algorithm>
 #include <fstream>
@@ -180,7 +178,7 @@ const char* Connector::GetPluginDescription()
 
 void Connector::LevelInit(const char* pMapName)
 {
-    m_gameServer->setMap(pMapName);
+    m_gameServer->onMapChange(pMapName);
 }
 
 void Connector::ServerActivate(edict_t* /*pEdictList*/, int /*edictCount*/, int /*clientMax*/)

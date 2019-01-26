@@ -41,6 +41,7 @@ set_source_files_properties (connector.cpp interfacestore.cpp srcdswrapper.cpp P
         -Wno-mismatched-tags\
         -Wno-ignored-qualifiers\
         -Wno-unused-local-typedefs\
+        -Wno-reorder\
         "
     COMPILE_DEFINITIONS "GNUC;POSIX;LINUX;_LINUX;_WCHAR_T_DEFINED;RAD_TELEMETRY_DISABLED;NO_MALLOC_OVERRIDE"
 )

@@ -22,13 +22,23 @@ class GameServer : public QObject {
      */
     Q_PROPERTY(QString map READ map NOTIFY mapChanged)
 
-    Q_PROPERTY(QString address READ address NOTIFY addressChanged)
+    /**
+     * The "ip:port" string which identifies what address the server is listening on.
+     */
+    Q_PROPERTY(QString address READ address CONSTANT)
+
+    /**
+     * The "+maxplayers" launch property. It is 24 by default.
+     */
     Q_PROPERTY(int maxPlayers READ maxPlayers CONSTANT)
 
 signals:
+    /**
+     * Emitted when the plugin is being unloaded, most likely during the game server shutdown.
+     */
     void aboutToQuit();
-    void mapChanged(const QString& map);
-    void addressChanged(const QString& address);
+
+    void mapChanged(QString map);
     void conVarChanged(QString conVarName, QString newValue);
 
 public:
@@ -36,12 +46,11 @@ public:
     virtual ~GameServer();
 
     const QString& gameLocation() const { return m_gameLocation; }
-
-    const QString& map() const { return m_map; }
-    void setMap(const QString& map);
-
-    const QString& address() const { return m_address; }
+    QString map() const;
+    QString address() const;
     int maxPlayers() const;
+
+    void onMapChange(const QString& map);
 
 public slots:
     /**
@@ -51,13 +60,8 @@ public slots:
 
     void watchConVar(const QString& conVarName);
 
-private slots:
-    void fetchUrl();
-
 private:
     QString m_gameLocation;
-    QString m_map;
-    QString m_address;
 
 };
 

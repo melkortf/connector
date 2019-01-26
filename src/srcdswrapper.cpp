@@ -38,6 +38,11 @@ void SrcdsWrapper::trackConVar(const char* cvarName, std::function<void (std::st
     conVarHandlers.insert(std::make_pair(cvarName, handler));
 }
 
+const char* SrcdsWrapper::getCurrentMap()
+{
+    return InterfaceStore::playerInfoManager->GetGlobalVars()->mapname.ToCStr();
+}
+
 int SrcdsWrapper::getMaxPlayers()
 {
     return InterfaceStore::playerInfoManager->GetGlobalVars()->maxClients;

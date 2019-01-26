@@ -1,9 +1,8 @@
 #ifndef CONNECTOR_H
 #define CONNECTOR_H
 
-//#include <cstdint>
-#include "engine/iserverplugin.h"
-#include "valve_minmax_off.h"
+#include <engine/iserverplugin.h>
+#include <valve_minmax_off.h>
 #include <QtCore/QScopedPointer>
 #include <list>
 
