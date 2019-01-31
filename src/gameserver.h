@@ -38,8 +38,25 @@ signals:
      */
     void aboutToQuit();
 
-    void mapChanged(QString map);
+    /**
+     * Emitted when the player connects.
+     * \param userId The connected user's slot.
+     */
+    void playerConnected(int userId);
+
+    /**
+     * Emitted when the given player leaves the server.
+     * \param userId The id of the user that has just left the server.
+     */
+    void playerDisconnected(int userId);
+
+    /**
+     * Emitted when one of the watched conVars changes.
+     * \sa watchConVar().
+     */
     void conVarChanged(QString conVarName, QString newValue);
+
+    void mapChanged(QString map);
 
 public:
     GameServer(QObject* parent = nullptr);
@@ -58,7 +75,20 @@ public slots:
      */
     QString getConVarValue(const QString& conVarName);
 
+    /**
+     * \brief Adds the given conVar to the list of watched conVars.
+     */
     void watchConVar(const QString& conVarName);
+
+    /**
+     * \brief Retrieves name of the given player.
+     */
+    QString getPlayerName(int userId);
+
+    /**
+     * \brief Retrieves the Steam ID of the given player.
+     */
+    quint64 getPlayerSteamId(int userId);
 
 private:
     QString m_gameLocation;

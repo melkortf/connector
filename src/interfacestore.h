@@ -16,7 +16,7 @@ public:
      */
     static bool isValid();
 
-    static IVEngineServer *engineServer;
+    static IVEngineServer* engineServer;
     static IPlayerInfoManager* playerInfoManager;
 
 };

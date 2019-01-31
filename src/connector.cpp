@@ -196,14 +196,17 @@ void Connector::LevelShutdown()
 
 }
 
-void Connector::ClientActive(edict_t* /*pEntity*/)
+void Connector::ClientActive(edict_t* pEntity)
 {
+    IPlayerInfo* playerInfo = InterfaceStore::playerInfoManager->GetPlayerInfo(pEntity);
+    emit m_gameServer->playerConnected(playerInfo->GetUserID());
 
 }
 
-void Connector::ClientDisconnect(edict_t* /*pEntity*/)
+void Connector::ClientDisconnect(edict_t* pEntity)
 {
-
+    IPlayerInfo* playerInfo = InterfaceStore::playerInfoManager->GetPlayerInfo(pEntity);
+    emit m_gameServer->playerDisconnected(playerInfo->GetUserID());
 }
 
 void Connector::ClientPutInServer(edict_t* /*pEntity*/, const char* /*playername*/)

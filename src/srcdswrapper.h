@@ -5,6 +5,7 @@
 
 class Connector;
 class IConVar;
+class IPlayerInfo;
 
 namespace morgoth {
 
@@ -19,6 +20,9 @@ public:
 
     static const char* getCurrentMap();
     static int getMaxPlayers();
+
+    static const char* getPlayerName(int userId);
+    static uint64_t getPlayerSteamId(int userId);
 
     SrcdsWrapper() = delete;
 

@@ -1,6 +1,7 @@
 #include "srcdswrapper.h"
 #include "interfacestore.h"
 #include <convar.h>
+#include <steam/steam_api.h>
 #include <map>
 #include <string>
 
@@ -8,6 +9,18 @@ namespace {
 
 std::map<std::string, ConVarRef> conVars;
 std::map<std::string, std::function<void (std::string)>> conVarHandlers;
+
+edict_t* getPlayerBySlotId(int slotId)
+{
+    for (int i = 1; i < InterfaceStore::playerInfoManager->GetGlobalVars()->maxClients; ++i) {
+        edict_t* player = InterfaceStore::engineServer->PEntityOfEntIndex(i);
+        IPlayerInfo* playerInfo = InterfaceStore::playerInfoManager->GetPlayerInfo(player);
+        if (playerInfo && playerInfo->GetUserID() == slotId)
+            return player;
+    }
+
+    return nullptr;
+}
 
 }
 
@@ -46,6 +59,20 @@ const char* SrcdsWrapper::getCurrentMap()
 int SrcdsWrapper::getMaxPlayers()
 {
     return InterfaceStore::playerInfoManager->GetGlobalVars()->maxClients;
+}
+
+const char* SrcdsWrapper::getPlayerName(int userId)
+{
+    edict_t* player = getPlayerBySlotId(userId);
+    IPlayerInfo* playerInfo = InterfaceStore::playerInfoManager->GetPlayerInfo(player);
+    return playerInfo ? playerInfo->GetName() : nullptr;
+}
+
+uint64_t SrcdsWrapper::getPlayerSteamId(int userId)
+{
+    edict_t* player = getPlayerBySlotId(userId);
+    const CSteamID* steamId = InterfaceStore::engineServer->GetClientSteamID(player);
+    return steamId->ConvertToUint64();
 }
 
 void SrcdsWrapper::conVarChangeHandler(IConVar* var, const char* /*pOldValue*/, float /*flOldValue*/)

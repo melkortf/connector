@@ -80,4 +80,14 @@ void GameServer::watchConVar(const QString& conVarName)
     });
 }
 
+QString GameServer::getPlayerName(int userId)
+{
+    return SrcdsWrapper::getPlayerName(userId);
+}
+
+quint64 GameServer::getPlayerSteamId(int userId)
+{
+    return SrcdsWrapper::getPlayerSteamId(userId);
+}
+
 } // namespace morgoth
