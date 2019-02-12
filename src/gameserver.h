@@ -91,6 +91,10 @@ public slots:
     quint64 getPlayerSteamId(int userId);
 
 private:
+    void registerService();
+
+private:
+    bool m_registered = false;
     QString m_gameLocation;
 
 };

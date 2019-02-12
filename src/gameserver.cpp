@@ -1,4 +1,5 @@
 #include "gameserver.h"
+#include "config.h"
 #include "gameserveradaptor.h"
 #include "srcdswrapper.h"
 #include <QtCore>
@@ -28,13 +29,9 @@ GameServer::GameServer(QObject* parent)  :
 {
     new GameServerAdaptor(this);
 
-    QDBusConnection conn = QDBusConnection::sessionBus();
-    conn.registerObject("/", this);
-
-    QString serviceName = ::findFirstAvailableServerId(conn);
-    // FIXME Register to DBus after a second or so to avoid
-    //  the lack of responsivenes
-    conn.registerService(serviceName);
+    // this is done via queued connection, as the plugin might become
+    // unresponsive for a couple of seconds
+    connect(this, &GameServer::mapChanged, this, &GameServer::registerService, Qt::QueuedConnection);
 }
 
 GameServer::~GameServer()
@@ -88,6 +85,22 @@ QString GameServer::getPlayerName(int userId)
 quint64 GameServer::getPlayerSteamId(int userId)
 {
     return SrcdsWrapper::getPlayerSteamId(userId);
+}
+
+void GameServer::registerService()
+{
+    if (!m_registered) {
+        QDBusConnection conn = QDBusConnection::sessionBus();
+        conn.registerObject("/", this);
+
+        QString serviceName = ::findFirstAvailableServerId(conn);
+        m_registered = conn.registerService(serviceName);
+
+        if (!m_registered) {
+            qWarning() << "Error registering GameServer service:" << conn.lastError();
+        }
+    }
+
 }
 
 } // namespace morgoth
