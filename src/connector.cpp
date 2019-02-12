@@ -124,15 +124,8 @@ bool Connector::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameS
         // http://stackoverflow.com/questions/25661295/why-does-qcoreapplication-call-setlocalelc-all-by-default-on-unix-linux
         setlocale(LC_NUMERIC, "C");
 
-        if (!QDBusConnection::sessionBus().isConnected()) {
-            qCritical("Cannot connect to the D-Bus session bus");
-            return false;
-        }
-
         icVar->InstallGlobalChangeCallback(morgoth::SrcdsWrapper::conVarChangeHandler);
         m_gameServer.reset(new morgoth::GameServer);
-
-        qInfo("Running");
 
         return true;
     } else {

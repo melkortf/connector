@@ -7,6 +7,26 @@
 
 namespace {
 
+QDBusConnection findDBusConnection()
+{
+    QDBusConnection connection = QDBusConnection::sessionBus();
+    QDBusConnectionInterface* iface = connection.interface();
+    if (connection.isConnected() && iface->isServiceRegistered("org.morgoth")) {
+        qDebug("Using session bus.");
+        return connection;
+    }
+
+    connection = QDBusConnection::systemBus();
+    iface = connection.interface();
+    if (connection.isConnected() && iface->isServiceRegistered("org.morgoth")) {
+        qDebug("Using system bus.");
+        return connection;
+    }
+
+    qWarning("No morgoth daemon found; using sesssion bus.");
+    return QDBusConnection::sessionBus();
+}
+
 QString findFirstAvailableServerId(const QDBusConnection& connection)
 {
     QDBusConnectionInterface* iface = connection.interface();
@@ -90,7 +110,7 @@ quint64 GameServer::getPlayerSteamId(int userId)
 void GameServer::registerService()
 {
     if (!m_registered) {
-        QDBusConnection conn = QDBusConnection::sessionBus();
+        QDBusConnection conn = ::findDBusConnection();
         conn.registerObject("/", this);
 
         QString serviceName = ::findFirstAvailableServerId(conn);
