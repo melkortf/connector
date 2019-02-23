@@ -2,20 +2,15 @@
 #include "config.h"
 #include "gameserveradaptor.h"
 #include "srcdswrapper.h"
+#include "servermanagerinterface.h"
 #include <QtCore>
 #include <QtDBus>
 
 namespace {
 
-QDBusConnection getDBusConnection()
+org::morgoth::ServerManager* getServerManager(QDBusConnection connection)
 {
-    QDBusConnection connection = QDBusConnection::connectToPeer("unix:path=/tmp/morgoth-server", "morgoth-server");
-    if (!connection.isConnected()) {
-        qWarning() << connection.lastError();
-        return QDBusConnection::sessionBus();
-    } else {
-        return connection;
-    }
+    return new org::morgoth::ServerManager("org.morgoth", "/servers", connection, qApp);
 }
 
 }
@@ -89,11 +84,29 @@ quint64 GameServer::getPlayerSteamId(int userId)
 void GameServer::registerService()
 {
     if (!m_registered) {
-        QDBusConnection conn = ::getDBusConnection();
-        m_registered = conn.registerObject("/", this);
+        using org::morgoth::ServerManager;
 
+        ServerManager* serverManager = ::getServerManager(QDBusConnection::sessionBus());
+        if (!serverManager->isValid()) {
+            serverManager = ::getServerManager(QDBusConnection::systemBus());
+            if (!serverManager->isValid()) {
+                qWarning("morgoth not running; unable to register this game server");
+                return;
+            }
+        }
+
+        QString address = serverManager->dbusServerAddress();
+        QDBusConnection connection = QDBusConnection::connectToPeer(address, "morgoth-server");
+        if (!connection.isConnected()) {
+            auto error = connection.lastError();
+            qWarning("unable to connect to %s: %s", qPrintable(address), qPrintable(error.message()));
+            return;
+        }
+
+        m_registered = connection.registerObject("/", this);
         if (!m_registered) {
-            qWarning() << "Error registering GameServer service:" << conn.lastError();
+            auto error = connection.lastError();
+            qWarning("unable to register game server at %s: %s", qPrintable(address), qPrintable(error.message()));
         }
     }
 
