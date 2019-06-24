@@ -16,6 +16,10 @@ add_library (connector MODULE
 configure_file (config.h.in config.h)
 target_sources (connector PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
+qt5_add_dbus_interface (connector_DBUS_INTERFACES org.morgoth.ServerManager.xml servermanagerinterface)
+target_sources (connector PRIVATE ${connector_DBUS_INTERFACES})
+set_property (SOURCE ${connector_DBUS_INTERFACES} PROPERTY SKIP_AUTOMOC ON)
+
 qt5_add_dbus_adaptor (gameserver_DBUS_ADAPTOR org.morgoth.connector.gameserver.xml gameserver.h morgoth::GameServer)
 target_sources (connector PRIVATE ${gameserver_DBUS_ADAPTOR})
 set_property (SOURCE ${gameserver_DBUS_ADAPTOR} PROPERTY SKIP_AUTOMOC ON)
