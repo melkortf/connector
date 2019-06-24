@@ -86,6 +86,14 @@ void GameServer::registerService()
     if (!m_registered) {
         using org::morgoth::ServerManager;
 
+        if (!QDBusConnection::sessionBus().isConnected()) {
+            qWarning("Unable to connect to the D-Bus session bus. Try running \"eval `dbus-launch --auto-syntax`\" before launching this server.");
+#if (QT_VERSION <= QT_VERSION_CHECK(5, 5, 0))
+            qWarning("If the problem persists, try using newer version of Qt.");
+#endif
+            return;
+        }
+
         ServerManager* serverManager = ::getServerManager(QDBusConnection::sessionBus());
         if (!serverManager->isValid()) {
             serverManager = ::getServerManager(QDBusConnection::systemBus());
