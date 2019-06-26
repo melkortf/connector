@@ -13,6 +13,32 @@ org::morgoth::ServerManager* getServerManager(QDBusConnection connection)
     return new org::morgoth::ServerManager("org.morgoth", "/servers", connection, qApp);
 }
 
+org::morgoth::ServerManager* findServerManager()
+{
+    org::morgoth::ServerManager* serverManager;
+    if (QDBusConnection::sessionBus().isConnected()) {
+        serverManager = ::getServerManager(QDBusConnection::sessionBus());
+        if (serverManager->isValid()) {
+            qDebug("Connected to morgoth on session bus");
+            return serverManager;
+        }
+    }
+
+    if (QDBusConnection::systemBus().isConnected()) {
+        serverManager = ::getServerManager(QDBusConnection::systemBus());
+        if (serverManager->isValid()) {
+            qDebug("Connected to morgoth on system bus");
+            return serverManager;
+        } else {
+            qWarning("morgoth not running; unable to register this game server");
+            return nullptr;
+        }
+    }
+
+    qWarning("Could not connect to D-Bus system bus. Is D-Bus daemon running?");
+    return nullptr;
+}
+
 }
 
 namespace morgoth {
@@ -84,25 +110,11 @@ quint64 GameServer::getPlayerSteamId(int userId)
 void GameServer::registerService()
 {
     if (!m_registered) {
-        using org::morgoth::ServerManager;
-
-        if (!QDBusConnection::sessionBus().isConnected()) {
-            qWarning("Unable to connect to the D-Bus session bus. Try running \"eval `dbus-launch --auto-syntax`\" before launching this server.");
-#if (QT_VERSION <= QT_VERSION_CHECK(5, 5, 0))
-            qWarning("If the problem persists, try using newer version of Qt.");
-#endif
+        org::morgoth::ServerManager* serverManager = findServerManager();
+        if (!serverManager)
             return;
-        }
 
-        ServerManager* serverManager = ::getServerManager(QDBusConnection::sessionBus());
-        if (!serverManager->isValid()) {
-            serverManager = ::getServerManager(QDBusConnection::systemBus());
-            if (!serverManager->isValid()) {
-                qWarning("morgoth not running; unable to register this game server");
-                return;
-            }
-        }
-
+        // find the location where morgoth is running its own D-Bus session and register to it
         QString address = serverManager->dbusServerAddress();
         QDBusConnection connection = QDBusConnection::connectToPeer(address, "morgoth-server");
         if (!connection.isConnected()) {
