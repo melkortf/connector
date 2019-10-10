@@ -107,6 +107,11 @@ quint64 GameServer::getPlayerSteamId(int userId)
     return SrcdsWrapper::getPlayerSteamId(userId);
 }
 
+void GameServer::ping() const
+{
+    qDebug("ping");
+}
+
 void GameServer::registerService()
 {
     if (!m_registered) {

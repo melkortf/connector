@@ -90,6 +90,11 @@ public slots:
      */
     quint64 getPlayerSteamId(int userId);
 
+    /**
+     * \brief Called by morgoth daemon to ensure the server is still running.
+     */
+    void ping() const;
+
 private:
     void registerService();
 
